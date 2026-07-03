@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Portale Egemonia — Forum & Gilde</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css"/>
+
+<!-- ══ CONFIGURA QUI ═══════════════════════════════════════════════════
+     1. Vai su https://supabase.com → crea un progetto gratuito
+     2. Settings → API → copia i valori qui sotto
+     ═══════════════════════════════════════════════════════════════════ -->
+<script>
+  const SUPABASE_URL  = 'https://ugfzulyirbvhtdyfywmp.supabase.co';
+  const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnZnp1bHlpcmJ2aHRkeWZ5d21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjMxMDYsImV4cCI6MjA5ODYzOTEwNn0.EFxmEBZb4hrUIiHOccKi-yntN5PGZy8fja5fFintEjE
+';
+</script>
+<!-- ════════════════════════════════════════════════════════════════════ -->
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f5f4f0;--surface:#fff;--surface2:#f9f8f6;
+  --border:#e2e0da;--border2:#ccc9c0;
+  --text:#1a1a18;--text2:#5a5850;--text3:#9a9890;
+  --accent:#534AB7;--accent-bg:#EEEDFE;--accent-t:#3C3489;
+  --warn:#BA7517;--warn-bg:#FAEEDA;--warn-t:#633806;
+  --danger:#A32D2D;--danger-bg:#FCEBEB;
+  --radius:8px;--r-card:12px;
+  --shadow:0 1px 4px rgba(0,0,0,.06),0 0 0 .5px rgba(0,0,0,.07);
+  --shadow-md:0 4px 16px rgba(0,0,0,.10),0 0 0 .5px rgba(0,0,0,.07);
+  font-size:15px;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  color:var(--text);background:var(--bg);
+}
+@media(prefers-color-scheme:dark){:root{
+  --bg:#18181a;--surface:#232325;--surface2:#1e1e20;
+  --border:#333336;--border2:#444448;
+  --text:#f0efe8;--text2:#a8a79e;--text3:#68677e;
+  --accent:#9d96f0;--accent-bg:#26215C;--accent-t:#CECBF6;
+  --warn:#EF9F27;--warn-bg:#412402;--warn-t:#FAC775;
+  --danger:#E24B4A;--danger-bg:#501313;
+}}
+body{min-height:100vh}
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+input,select,textarea{
+  background:var(--surface);border:.5px solid var(--border2);
+  border-radius:var(--radius);color:var(--text);
+  padding:7px 10px;font-size:14px;font-family:inherit;outline:none;
+  transition:border-color .15s,box-shadow .15s;width:100%;
+}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(83,74,183,.12)}
+textarea{resize:vertical;min-height:80px}
+button{
+  background:var(--surface);border:.5px solid var(--border2);
+  border-radius:var(--radius);color:var(--text);
+  padding:7px 14px;font-size:14px;font-family:inherit;cursor:pointer;
+  transition:background .12s,border-color .12s,transform .08s;
+  display:inline-flex;align-items:center;gap:5px;
+}
+button:hover{background:var(--surface2)}
+button:active{transform:scale(.98)}
+button.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+button.primary:hover{opacity:.9}
+button.danger-btn{color:var(--danger);border-color:var(--danger)}
+button.danger-btn:hover{background:var(--danger-bg)}
+.badge{font-size:11px;padding:2px 8px;border-radius:20px;font-weight:500;display:inline-block}
+.badge.master{background:var(--warn-bg);color:var(--warn-t)}
+.badge.player{background:var(--accent-bg);color:var(--accent-t)}
+
+/* ── LOADING / ERROR ── */
+#loading-screen{
+  min-height:100vh;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:12px;font-size:15px;color:var(--text2);
+}
+.spinner{width:32px;height:32px;border:3px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+#error-screen{
+  min-height:100vh;display:none;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:2rem;text-align:center;
+}
+#error-screen h2{font-size:18px;color:var(--danger)}
+#error-screen p{font-size:14px;color:var(--text2);max-width:520px;line-height:1.6}
+#error-screen code{
+  display:block;background:var(--surface2);border:.5px solid var(--border);
+  border-radius:var(--r-card);padding:.75rem 1rem;font-size:12.5px;
+  text-align:left;margin-top:.5rem;line-height:1.8;font-family:monospace;white-space:pre-wrap;
+}
+
+/* ── LOGIN ── */
+#login-page{
+  min-height:100vh;display:none;
+  align-items:center;justify-content:center;padding:2rem 1rem;
+}
+.login-box{
+  background:var(--surface);border:.5px solid var(--border);
+  border-radius:16px;padding:2rem;width:100%;max-width:420px;box-shadow:var(--shadow-md);
+}
+.login-box .brand{display:flex;align-items:center;gap:10px;margin-bottom:.25rem}
+.login-box .brand h1{font-size:22px;font-weight:600}
+.login-box .sub{font-size:14px;color:var(--text2);margin-bottom:1.5rem}
+.lcard{
+  background:var(--surface2);border:.5px solid var(--border);border-radius:var(--r-card);
+  padding:.9rem 1.1rem;cursor:pointer;display:flex;align-items:center;gap:12px;margin-bottom:10px;
+  transition:border-color .15s,box-shadow .15s;
+}
+.lcard:hover{border-color:var(--accent);box-shadow:0 0 0 2px rgba(83,74,183,.1)}
+.lcard .av{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.lcard .li strong{display:block;font-size:15px;font-weight:500}
+.lcard .li span{font-size:13px;color:var(--text2)}
+#name-wrap{display:none;margin-top:1.25rem;border-top:.5px solid var(--border);padding-top:1.25rem}
+#name-wrap label{font-size:13px;color:var(--text2);display:block;margin-bottom:5px}
+#name-wrap input{margin-bottom:8px}
+
+/* ── APP ── */
+#app{display:none;height:100vh;overflow:hidden}
+#topbar{
+  display:none;align-items:center;gap:8px;padding:.65rem 1rem;
+  background:var(--surface);border-bottom:.5px solid var(--border);
+  position:sticky;top:0;z-index:50;
+}
+#topbar .tb-brand{font-weight:600;font-size:15px;flex:1}
+#menu-toggle{background:none;border:none;padding:4px;font-size:20px}
+#layout{display:flex;height:100vh}
+#sidebar{
+  width:210px;flex-shrink:0;background:var(--surface);
+  border-right:.5px solid var(--border);display:flex;flex-direction:column;
+  overflow-y:auto;transition:transform .2s;
+}
+#sb-top{padding:1rem;border-bottom:.5px solid var(--border)}
+#sb-top .sb-logo{font-size:18px;font-weight:600;margin-bottom:.25rem}
+.sb-who{font-size:13px;color:var(--text2);display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-top:4px}
+.sb-name{font-weight:500;color:var(--text)}
+.logout-btn{background:none;border:none;font-size:12px;color:var(--text3);cursor:pointer;padding:0;margin-top:4px;text-decoration:underline}
+.sg{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;padding:.7rem 1rem .2rem}
+.nb{
+  display:flex;align-items:center;gap:8px;width:100%;padding:7px 1rem;
+  background:none;border:none;font-size:14px;color:var(--text2);
+  cursor:pointer;text-align:left;border-radius:0;transition:background .1s,color .1s;
+}
+.nb:hover{background:var(--surface2);color:var(--text)}
+.nb.active{background:var(--accent-bg);color:var(--accent);font-weight:500}
+.nb i{font-size:16px;width:20px;flex-shrink:0}
+.nb .cnt{
+  margin-left:auto;font-size:11px;background:var(--surface2);
+  border-radius:20px;padding:1px 7px;color:var(--text3);border:.5px solid var(--border);
+}
+#sb-bottom{margin-top:auto;padding:.75rem 1rem;border-top:.5px solid var(--border)}
+#sb-bottom button{width:100%;justify-content:center}
+#main{flex:1;min-width:0;display:flex;flex-direction:column;overflow:hidden}
+#main-header{
+  padding:.85rem 1.25rem;border-bottom:.5px solid var(--border);background:var(--surface);
+  display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;min-height:52px;
+}
+#mh-icon{font-size:20px}
+#mh-title{font-size:16px;font-weight:600;flex:1}
+#mh-actions{display:flex;gap:6px}
+#mh-actions button{font-size:13px;padding:5px 12px}
+#content{flex:1;overflow-y:auto}
+
+/* ── TOAST ── */
+#toast{
+  position:fixed;bottom:1.5rem;right:1.5rem;z-index:500;
+  background:var(--text);color:var(--bg);padding:.6rem 1.1rem;
+  border-radius:var(--r-card);font-size:13.5px;box-shadow:var(--shadow-md);
+  opacity:0;transform:translateY(8px);transition:opacity .2s,transform .2s;pointer-events:none;
+}
+#toast.show{opacity:1;transform:translateY(0)}
+
+/* ── FORUM ── */
+.pinned-bar{
+  margin:.75rem 1.25rem 0;background:var(--warn-bg);border:.5px solid var(--warn);
+  border-radius:var(--r-card);padding:.6rem .9rem;font-size:13px;color:var(--warn-t);
+  display:flex;align-items:flex-start;gap:7px;
+}
+.posts-list{padding:1rem 1.25rem;display:flex;flex-direction:column;gap:10px}
+.post-card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r-card);padding:.9rem 1.1rem;box-shadow:var(--shadow)}
+.post-card.master-post{border-left:3px solid var(--warn)}
+.post-head{display:flex;align-items:center;gap:9px;margin-bottom:.45rem}
+.post-av{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;flex-shrink:0}
+.post-meta{flex:1;min-width:0}
+.post-author{font-size:14px;font-weight:500;display:flex;align-items:center;gap:6px}
+.post-time{font-size:11px;color:var(--text3);margin-top:1px}
+.post-title{font-size:13.5px;font-weight:500;color:var(--text2);margin-bottom:.3rem}
+.post-body{font-size:14px;line-height:1.65;white-space:pre-wrap}
+.post-reacts{display:flex;gap:5px;flex-wrap:wrap;margin-top:.65rem;align-items:center}
+.rb{background:var(--surface2);border:.5px solid var(--border);border-radius:20px;padding:2px 9px;font-size:12.5px;cursor:pointer}
+.rb:hover{border-color:var(--border2)}
+.rb.on{background:var(--accent-bg);border-color:var(--accent);color:var(--accent-t)}
+.rb-add{background:none;border:.5px dashed var(--border2);border-radius:20px;padding:2px 8px;font-size:12.5px;cursor:pointer;color:var(--text3)}
+.rb-add:hover{border-color:var(--accent);color:var(--accent)}
+.pin-btn{margin-left:auto;font-size:11px;color:var(--text3);background:none;border:.5px solid var(--border);border-radius:6px;padding:2px 7px;cursor:pointer}
+.pin-btn:hover{background:var(--warn-bg);color:var(--warn-t);border-color:var(--warn)}
+.empty-state{text-align:center;padding:4rem 1rem;color:var(--text3);font-size:14px}
+.empty-state .ei{font-size:40px;display:block;margin-bottom:.6rem}
+#compose-bar{
+  border-top:.5px solid var(--border);padding:.85rem 1.25rem;
+  background:var(--surface);position:sticky;bottom:0;
+}
+#compose-bar .cl{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+#compose-bar .cl span{font-size:12.5px;color:var(--text2)}
+#compose-bar textarea{height:64px;resize:none}
+#compose-bar .cf{display:flex;justify-content:space-between;align-items:center;margin-top:7px}
+#compose-bar .cf .hint{font-size:11.5px;color:var(--text3)}
+#char-count{font-size:11.5px;color:var(--text3)}
+#char-count.warn{color:var(--warn)}
+
+/* ── CLASSIFICA ── */
+.cl-grid{display:grid;gap:10px;padding:1rem 1.25rem}
+.fc{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r-card);overflow:hidden;cursor:pointer;box-shadow:var(--shadow);transition:border-color .15s,box-shadow .15s}
+.fc:hover{border-color:var(--accent);box-shadow:0 0 0 2px rgba(83,74,183,.1)}
+.fc-banner{height:5px}
+.fc-body{padding:.85rem 1.1rem}
+.fc-top{display:flex;align-items:flex-start;gap:10px;margin-bottom:.5rem}
+.fc-embl{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:24px;flex-shrink:0}
+.fc-name{font-size:15px;font-weight:600}
+.fc-tag{font-size:12.5px;color:var(--text2);margin-top:2px}
+.fc-rank{font-size:22px;min-width:34px;text-align:right}
+.pv-row{display:flex;align-items:center;gap:8px}
+.pv-lbl{font-size:11px;color:var(--text3);width:85px}
+.pv-bw{flex:1;height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;border:.5px solid var(--border)}
+.pv-b{height:100%;border-radius:4px;transition:width .5s ease}
+.pv-v{font-size:13px;font-weight:600;min-width:34px;text-align:right}
+.gl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:1rem 1.25rem}
+.gc{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r-card);padding:.85rem 1.1rem;cursor:pointer;display:flex;align-items:center;gap:10px;box-shadow:var(--shadow);transition:border-color .15s}
+.gc:hover{border-color:var(--accent)}
+.ge{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.gn{font-size:14.5px;font-weight:500}
+.gs{font-size:12px;color:var(--text2);margin-top:1px}
+.pvc{margin-left:auto;font-size:12.5px;font-weight:600;background:var(--surface2);border:.5px solid var(--border);border-radius:20px;padding:2px 10px}
+.d-back{background:none;border:none;font-size:13px;color:var(--accent);cursor:pointer;margin:1rem 1.25rem .75rem;padding:0}
+.d-back:hover{text-decoration:underline}
+.d-wrap{padding:0 1.25rem 1.5rem}
+.d-head{display:flex;align-items:center;gap:14px;margin-bottom:1rem}
+.d-embl{width:60px;height:60px;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:34px;flex-shrink:0}
+.d-name{font-size:20px;font-weight:600}
+.d-tag{font-size:13.5px;color:var(--text2);margin-top:3px}
+.d-sec{font-size:10.5px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin:1.1rem 0 .45rem}
+.d-lore{font-size:14px;line-height:1.7;color:var(--text2);background:var(--surface2);border-radius:var(--r-card);padding:.7rem .95rem;border:.5px solid var(--border)}
+.d-pv{display:flex;align-items:baseline;gap:7px;margin:.5rem 0 .25rem}
+.d-pvn{font-size:36px;font-weight:700}
+.d-pvl{font-size:14px;color:var(--text2)}
+.miss-item{background:var(--surface2);border-radius:var(--radius);padding:.55rem .9rem;font-size:14px;display:flex;align-items:center;gap:8px;margin-bottom:6px;border:.5px solid var(--border)}
+.mp-wrap{padding:1rem 1.25rem;display:flex;flex-direction:column;gap:12px}
+.mp-card{background:var(--surface);border:.5px solid var(--border);border-radius:var(--r-card);padding:.9rem 1.1rem;box-shadow:var(--shadow)}
+.mp-card h3{font-size:15px;font-weight:600;margin-bottom:.7rem}
+.pvc-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:.5px solid var(--border)}
+.pvc-row:last-child{border-bottom:none}
+.pvc-embl{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.pvc-name{flex:1;font-size:13.5px}
+.pvc-btn{width:28px;height:28px;background:var(--surface2);border:.5px solid var(--border);border-radius:6px;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center;padding:0}
+.pvc-btn:hover{background:var(--bg)}
+.pvc-val{font-size:14px;font-weight:600;min-width:36px;text-align:center}
+.step-inp{width:58px!important;font-size:13px;text-align:center}
+
+/* ── EMOJI PICKER ── */
+#emoji-picker{display:none;position:fixed;z-index:300;background:var(--surface);border:.5px solid var(--border2);border-radius:var(--r-card);padding:8px;box-shadow:var(--shadow-md);flex-wrap:wrap;gap:3px;width:196px}
+#emoji-picker.open{display:flex}
+#emoji-picker button{background:none;border:none;font-size:18px;border-radius:6px;padding:3px 5px;width:36px;height:36px;display:flex;align-items:center;justify-content:center}
+#emoji-picker button:hover{background:var(--surface2)}
+
+/* ── MODAL ── */
+#modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:1rem}
+#modal-overlay.open{display:flex}
+#modal{background:var(--surface);border:.5px solid var(--border);border-radius:16px;padding:1.5rem;width:100%;max-width:480px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-md)}
+#modal h2{font-size:18px;font-weight:600;margin-bottom:1rem}
+#modal label{font-size:12.5px;color:var(--text2);display:block;margin-bottom:4px;margin-top:12px}
+.modal-footer{display:flex;gap:8px;justify-content:flex-end;margin-top:1.1rem}
+.emoji-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:5px}
+.eo{width:36px;height:36px;border:.5px solid var(--border);border-radius:8px;background:var(--surface2);cursor:pointer;font-size:20px;display:flex;align-items:center;justify-content:center}
+.eo:hover,.eo.sel{border-color:var(--accent);background:var(--accent-bg)}
+.color-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+.co{width:28px;height:28px;border-radius:50%;cursor:pointer;border:2px solid transparent;transition:border-color .1s}
+.co.sel{border-color:var(--text)!important}
+#sb-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:98}
+@media(max-width:700px){
+  #topbar{display:flex}
+  #layout{height:calc(100vh - 48px)}
+  #sidebar{position:fixed;top:48px;left:0;bottom:0;z-index:99;transform:translateX(-100%);box-shadow:var(--shadow-md);height:calc(100vh - 48px)}
+  #sidebar.open{transform:translateX(0)}
+  #sb-overlay.open{display:block}
+  .gl-grid{grid-template-columns:1fr}
+}
+</style>
+</head>
+<body>
+
+<div id="loading-screen">
+  <div class="spinner"></div>
+  <span>Connessione al database…</span>
+</div>
+
+<div id="error-screen">
+  <h2>⚠️ Configurazione richiesta</h2>
+  <p>Prima di usare il portale completa questi passi:</p>
+  <code id="error-detail"></code>
+</div>
+
+<div id="login-page">
+  <div class="login-box">
+    <div class="brand"><span style="font-size:28px">⚔️</span><h1>Portale Egemonia</h1></div>
+    <p class="sub">Forum di downtime · Gilde · Punti Vessillo</p>
+    <div class="lcard" onclick="startLogin('master')">
+      <div class="av" style="background:var(--warn-bg)">🎲</div>
+      <div class="li"><strong>Master</strong><span>Gestisci forum, gilde e Punti Vessillo</span></div>
+      <span class="badge master">Master</span>
+    </div>
+    <div class="lcard" onclick="startLogin('player')">
+      <div class="av" style="background:var(--accent-bg)">🧙</div>
+      <div class="li"><strong>Giocatore</strong><span>Scrivi, leggi, reagisci, consulta gilde</span></div>
+      <span class="badge player">PG</span>
+    </div>
+    <div id="name-wrap">
+      <label id="name-lbl">Nome personaggio</label>
+      <input type="text" id="name-inp" maxlength="30" placeholder="Es. Aldric il Grigio"/>
+      <button class="primary" style="width:100%;margin-top:8px;justify-content:center" onclick="doLogin()">Entra nel portale →</button>
+    </div>
+  </div>
+</div>
+
+<div id="app">
+  <div id="topbar">
+    <button id="menu-toggle" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+    <span class="tb-brand">⚔️ Egemonia</span>
+    <span id="tb-badge"></span>
+  </div>
+  <div id="sb-overlay" onclick="closeSidebar()"></div>
+  <div id="layout">
+    <nav id="sidebar">
+      <div id="sb-top">
+        <div class="sb-logo">⚔️ Egemonia</div>
+        <div class="sb-who">
+          <span id="sb-badge-el"></span>
+          <span class="sb-name" id="sb-name"></span>
+        </div>
+        <button class="logout-btn" onclick="doLogout()">← Esci</button>
+      </div>
+      <div class="sg">Forum</div>
+      <button class="nb" data-v="annunci"  onclick="sw('annunci')"><i class="ti ti-speakerphone"></i>Annunci<span class="cnt" id="c-annunci">0</span></button>
+      <button class="nb" data-v="missioni" onclick="sw('missioni')"><i class="ti ti-map-2"></i>Missioni<span class="cnt" id="c-missioni">0</span></button>
+      <button class="nb" data-v="lore"     onclick="sw('lore')"><i class="ti ti-book"></i>Lore<span class="cnt" id="c-lore">0</span></button>
+      <button class="nb" data-v="diari"    onclick="sw('diari')"><i class="ti ti-feather"></i>Diari &amp; Azioni<span class="cnt" id="c-diari">0</span></button>
+      <button class="nb" data-v="mercato"  onclick="sw('mercato')"><i class="ti ti-shopping-bag"></i>Mercato<span class="cnt" id="c-mercato">0</span></button>
+      <button class="nb" data-v="taverna"  onclick="sw('taverna')"><i class="ti ti-beer"></i>Taverna<span class="cnt" id="c-taverna">0</span></button>
+      <button class="nb" data-v="notizie"  onclick="sw('notizie')"><i class="ti ti-news"></i>Notizie<span class="cnt" id="c-notizie">0</span></button>
+      <div class="sg">Fazioni</div>
+      <button class="nb" data-v="classifica" onclick="sw('classifica')"><i class="ti ti-trophy"></i>Classifica PV</button>
+      <button class="nb" data-v="gilde"      onclick="sw('gilde')"><i class="ti ti-shield"></i>Gilde</button>
+      <button class="nb" data-v="fazioni"    onclick="sw('fazioni')"><i class="ti ti-flag"></i>Fazioni</button>
+      <div class="sg" id="sg-master" style="display:none">Master</div>
+      <button class="nb" id="nb-pannello" data-v="pannello" onclick="sw('pannello')" style="display:none"><i class="ti ti-settings"></i>Pannello</button>
+      <div id="sb-bottom"><button onclick="openPostModal()"><i class="ti ti-edit"></i> Nuovo post</button></div>
+    </nav>
+    <main id="main">
+      <div id="main-header">
+        <span id="mh-icon"></span>
+        <span id="mh-title"></span>
+        <div id="mh-actions"></div>
+      </div>
+      <div id="content"></div>
+    </main>
+  </div>
+</div>
+
+<div id="emoji-picker"></div>
+<div id="modal-overlay">
+  <div id="modal">
+    <h2 id="modal-h"></h2>
+    <div id="modal-body"></div>
+    <div class="modal-footer">
+      <button onclick="closeModal()">Annulla</button>
+      <button class="primary" onclick="modalOk()">Salva</button>
+    </div>
+  </div>
+</div>
+<div id="toast"></div>
+
+<script>
+/* ══ COSTANTI ══ */
+const CH = {
+  annunci:  {icon:'📢',title:'Annunci',       mo:true },
+  missioni: {icon:'🗺️',title:'Missioni',      mo:true },
+  lore:     {icon:'📖',title:'Lore',          mo:true },
+  diari:    {icon:'🪶',title:'Diari & Azioni',mo:false},
+  mercato:  {icon:'🛍️',title:'Mercato',       mo:false},
+  taverna:  {icon:'🍺',title:'Taverna',       mo:false},
+  notizie:  {icon:'📜',title:'Notizie',       mo:false},
+};
+const FORUM_KEYS = Object.keys(CH);
+const GUILD_META = {
+  classifica:{icon:'🏆',title:'Classifica Punti Vessillo'},
+  gilde:     {icon:'🛡️',title:'Gilde'},
+  fazioni:   {icon:'⚑', title:'Fazioni'},
+  pannello:  {icon:'⚙️',title:'Pannello Master'},
+};
+const EMBLEMI=['⚔️','🛡️','🐉','🦅','🌙','☀️','🌿','🔥','💀','🌊','🏔️','🌹','🐺','🦁','🦊','🧙','👑','⚡','🗡️','🕊️'];
+const CHEX=['#7F77DD','#1D9E75','#D85A30','#D4537E','#378ADD','#BA7517','#639922','#888780','#E24B4A','#534AB7'];
+const CBGX=['#EEEDFE','#E1F5EE','#FAECE7','#FBEAF0','#E6F1FB','#FAEEDA','#EAF3DE','#F1EFE8','#FCEBEB','#EEEDFE'];
+const EMOJIS=['👍','❤️','⚔️','🎲','🏆','😂','🔥','🙏','💰','👀','🐉','✨','😮','🤔','😤','🫡','🎉','🌙'];
+
+/* ══ STATE ══ */
+let sb, user=null, role=null, pendingRole=null;
+let postsCache={}, entitiesCache=[];
+let curView='annunci', detail=null;
+let modalMode=null, editId=null;
+let selEmb=EMBLEMI[0], selCol=CHEX[0], selColBg=CBGX[0];
+let epickIdx=null, pvStep=5, realtimeSub=null;
+
+/* ══ INIT ══ */
+async function initSupabase() {
+  const loadEl = document.getElementById('loading-screen');
+  const errEl  = document.getElementById('error-screen');
+  const loginEl= document.getElementById('login-page');
+
+  if (SUPABASE_URL.startsWith('INSERISCI') || SUPABASE_ANON.startsWith('INSERISCI')) {
+    loadEl.style.display='none'; errEl.style.display='flex';
+    document.getElementById('error-detail').textContent =
+`Passo 1 — Apri questo file HTML in un editor di testo
+Passo 2 — Trova le righe SUPABASE_URL e SUPABASE_ANON in cima al file
+           e sostituisci i segnaposto con i valori da supabase.com → Settings → API
+
+Passo 3 — In Supabase vai su SQL Editor e lancia questo script:
+
+create table if not exists posts (
+  id          bigint generated always as identity primary key,
+  channel     text not null,
+  author      text not null,
+  role        text not null,
+  title       text,
+  body        text not null,
+  reactions   jsonb default '{}',
+  pinned      boolean default false,
+  created_at  timestamptz default now()
+);
+
+create table if not exists entities (
+  id        text primary key,
+  tipo      text not null,
+  nome      text not null,
+  tagline   text,
+  emblema   text,
+  color     text,
+  color_bg  text,
+  lore      text,
+  missioni  jsonb default '[]',
+  pv        integer default 0
+);
+
+alter table posts    enable row level security;
+alter table entities enable row level security;
+create policy "leggi post"      on posts    for select using (true);
+create policy "scrivi post"     on posts    for insert with check (true);
+create policy "aggiorna post"   on posts    for update using (true);
+create policy "leggi entities"  on entities for select using (true);
+create policy "gestisci entity" on entities for all    using (true);
+
+Passo 4 — Salva il file e aprilo nel browser.`;
+    return;
+  }
+
+  try {
+    sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+    const {error} = await sb.from('posts').select('id').limit(1);
+    if (error && error.code !== 'PGRST116') throw error;
+    loadEl.style.display='none';
+    loginEl.style.display='flex';
+  } catch(e) {
+    loadEl.style.display='none'; errEl.style.display='flex';
+    document.getElementById('error-detail').textContent =
+      `Errore connessione: ${e.message}\n\nVerifica URL, chiave anon e che le tabelle esistano.`;
+  }
+}
+
+/* ══ SUPABASE — POSTS ══ */
+async function fetchPosts(channel) {
+  const {data,error} = await sb.from('posts').select('*').eq('channel',channel).order('created_at',{ascending:true});
+  if (error){showToast('Errore caricamento');return[];}
+  postsCache[channel]=data; return data;
+}
+async function insertPost(channel, payload) {
+  const {error} = await sb.from('posts').insert({channel,author:payload.author,role:payload.role,title:payload.title||null,body:payload.body,reactions:{},pinned:false});
+  if (error){showToast('Errore invio');return false;} return true;
+}
+async function updateReactions(id, reactions) {
+  await sb.from('posts').update({reactions}).eq('id',id);
+}
+async function setPinned(id) {
+  await sb.from('posts').update({pinned:true}).eq('id',id);
+}
+
+/* ══ SUPABASE — ENTITIES ══ */
+async function fetchEntities() {
+  const {data,error} = await sb.from('entities').select('*');
+  if (error){showToast('Errore gilde');return;}
+  entitiesCache=data||[];
+}
+async function upsertEntity(obj) {
+  const {error} = await sb.from('entities').upsert({
+    id:obj.id,tipo:obj.tipo,nome:obj.nome,tagline:obj.tagline||null,
+    emblema:obj.emblema,color:obj.color,color_bg:obj.colorBg,
+    lore:obj.lore||null,missioni:obj.missioni||[],pv:obj.pv||0
+  },{onConflict:'id'});
+  if (error){showToast('Errore salvataggio');return false;} return true;
+}
+async function deleteEntity(id) {
+  const {error} = await sb.from('entities').delete().eq('id',id);
+  if (error){showToast('Errore eliminazione');return false;} return true;
+}
+
+/* ══ REALTIME ══ */
+function subscribeChannel(channel) {
+  if (realtimeSub) sb.removeChannel(realtimeSub);
+  realtimeSub = sb.channel('rt-'+channel)
+    .on('postgres_changes',{event:'*',schema:'public',table:'posts',filter:`channel=eq.${channel}`},
+      async () => { await fetchPosts(channel); if(curView===channel&&!detail)renderView(); updateCounts(); })
+    .subscribe();
+}
+
+/* ══ AUTH ══ */
+function startLogin(r) {
+  pendingRole=r;
+  document.getElementById('name-wrap').style.display='block';
+  document.getElementById('name-lbl').textContent=r==='master'?'Il tuo nome da Master':'Nome personaggio';
+  document.getElementById('name-inp').placeholder=r==='master'?'Es. Il Narratore':'Es. Aldric il Grigio';
+  document.getElementById('name-inp').focus();
+}
+async function doLogin() {
+  const n=document.getElementById('name-inp').value.trim();
+  if(!n){alert('Inserisci un nome!');return;}
+  user=n; role=pendingRole;
+  document.getElementById('login-page').style.display='none';
+  document.getElementById('app').style.display='block';
+  document.getElementById('sb-name').textContent=n;
+  const bdg=role==='master'?'<span class="badge master">Master</span>':'<span class="badge player">PG</span>';
+  document.getElementById('sb-badge-el').innerHTML=bdg;
+  document.getElementById('tb-badge').innerHTML=bdg;
+  if(role==='master'){
+    document.getElementById('sg-master').style.display='block';
+    document.getElementById('nb-pannello').style.display='flex';
+  }
+  await fetchEntities();
+  await fetchPosts('annunci');
+  await updateCounts();
+  sw('annunci');
+}
+function doLogout() {
+  user=null; role=null; detail=null;
+  if(realtimeSub){sb.removeChannel(realtimeSub);realtimeSub=null;}
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-page').style.display='flex';
+  document.getElementById('name-wrap').style.display='none';
+  document.getElementById('name-inp').value='';
+  document.getElementById('sg-master').style.display='none';
+  document.getElementById('nb-pannello').style.display='none';
+  closeSidebar();
+}
+document.getElementById('name-inp').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+/* ══ SIDEBAR MOBILE ══ */
+function toggleSidebar(){document.getElementById('sidebar').classList.toggle('open');document.getElementById('sb-overlay').classList.toggle('open');}
+function closeSidebar(){document.getElementById('sidebar').classList.remove('open');document.getElementById('sb-overlay').classList.remove('open');}
+
+/* ══ NAV ══ */
+async function sw(v) {
+  curView=v; detail=null;
+  document.querySelectorAll('.nb').forEach(b=>b.classList.toggle('active',b.dataset.v===v));
+  closeSidebar();
+  const act=document.getElementById('mh-actions'); act.innerHTML='';
+  if(FORUM_KEYS.includes(v)){
+    document.getElementById('mh-icon').textContent=CH[v].icon;
+    document.getElementById('mh-title').textContent=CH[v].title;
+    await fetchPosts(v); subscribeChannel(v);
+  } else {
+    document.getElementById('mh-icon').textContent=GUILD_META[v]?.icon||'';
+    document.getElementById('mh-title').textContent=GUILD_META[v]?.title||'';
+    await fetchEntities();
+    if(role==='master'&&v==='gilde')   act.appendChild(mkBtn('+ Nuova gilda',  ()=>openEntityModal('new-gilda')));
+    if(role==='master'&&v==='fazioni') act.appendChild(mkBtn('+ Nuova fazione',()=>openEntityModal('new-fazione')));
+  }
+  renderView();
+}
+function mkBtn(label,fn){const b=document.createElement('button');b.innerHTML=label;b.onclick=fn;return b;}
+
+async function updateCounts() {
+  for(const k of FORUM_KEYS){
+    const {count}=await sb.from('posts').select('id',{count:'exact',head:true}).eq('channel',k);
+    const el=document.getElementById('c-'+k); if(el)el.textContent=count||0;
+  }
+}
+
+/* ══ RENDER ══ */
+function renderView() {
+  const c=document.getElementById('content');
+  document.getElementById('compose-bar')?.remove();
+  if(detail){renderDetail(c);return;}
+  if(FORUM_KEYS.includes(curView))renderForum(c);
+  else if(curView==='classifica')renderClassifica(c);
+  else if(curView==='gilde')renderEntityList(c,'gilda');
+  else if(curView==='fazioni')renderEntityList(c,'fazione');
+  else if(curView==='pannello')renderPannello(c);
+}
+
+/* ══ FORUM ══ */
+function renderForum(c) {
+  const info=CH[curView], locked=info.mo&&role==='player';
+  const ch=postsCache[curView]||[];
+  let html='';
+  ch.filter(p=>p.pinned).forEach(p=>{
+    html+=`<div class="pinned-bar"><i class="ti ti-pin"></i><div><strong>${esc(p.author)}:</strong> ${esc((p.title||p.body).slice(0,90))}…</div></div>`;
+  });
+  const wrap=document.createElement('div'); wrap.innerHTML=html;
+  const list=document.createElement('div'); list.className='posts-list';
+  if(!ch.length){
+    list.innerHTML=`<div class="empty-state"><span class="ei">${info.icon}</span>${locked?'Nessun annuncio ancora.':'Nessun post ancora. Sii il primo!'}</div>`;
+  } else {
+    [...ch].reverse().forEach(p=>{
+      const cl=getCol(p.author), isMp=p.role==='master';
+      const reacts=Object.entries(p.reactions||{}).map(([em,us])=>
+        `<button class="rb${us.includes(user)?' on':''}" onclick="toggleReact(${p.id},'${em}')">${em} ${us.length}</button>`).join('');
+      const pinBtn=role==='master'&&!p.pinned
+        ?`<button class="pin-btn" onclick="pinPost(${p.id})"><i class="ti ti-pin"></i> Fissa</button>`:'';
+      const card=document.createElement('div');
+      card.className='post-card'+(isMp?' master-post':'');
+      card.innerHTML=`
+        <div class="post-head">
+          <div class="post-av" style="background:${cl.bg};color:${cl.c}">${ini(p.author)}</div>
+          <div class="post-meta">
+            <div class="post-author">${esc(p.author)}<span class="badge ${isMp?'master':'player'}">${isMp?'Master':'PG'}</span></div>
+            <div class="post-time">${fmtTime(new Date(p.created_at))}</div>
+          </div>
+        </div>
+        ${p.title?`<div class="post-title">${esc(p.title)}</div>`:''}
+        <div class="post-body">${esc(p.body)}</div>
+        <div class="post-reacts">${reacts}<button class="rb-add" onclick="showEpick(event,${p.id})">+ 😊</button>${pinBtn}</div>`;
+      list.appendChild(card);
+    });
+  }
+  c.innerHTML=''; c.appendChild(wrap); c.appendChild(list);
+  // compose
+  const cb=document.createElement('div'); cb.id='compose-bar';
+  if(!locked){
+    cb.innerHTML=`
+      <div class="cl"><span>Scrivi in ${info.title}</span><span id="char-count">0 / 800</span></div>
+      <textarea id="compose-txt" maxlength="800" placeholder="Cosa fa il tuo personaggio nel downtime?" oninput="updCC()"></textarea>
+      <div class="cf"><span class="hint">Scrivi in prima persona</span><button class="primary" onclick="submitPost()">Pubblica</button></div>`;
+  } else {
+    cb.innerHTML=`<div style="padding:.5rem 0;font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px"><i class="ti ti-lock"></i> Solo il Master può scrivere qui</div>`;
+  }
+  document.getElementById('main').appendChild(cb);
+  c.scrollTop=c.scrollHeight;
+}
+
+function updCC(){
+  const t=document.getElementById('compose-txt')?.value||'';
+  const el=document.getElementById('char-count');
+  if(el){el.textContent=`${t.length} / 800`;el.className=t.length>720?'warn':'';}
+}
+async function submitPost(){
+  const body=document.getElementById('compose-txt')?.value?.trim();
+  if(!body)return;
+  const btn=document.querySelector('#compose-bar .primary');
+  if(btn){btn.disabled=true;btn.textContent='…';}
+  const ok=await insertPost(curView,{author:user,role,body});
+  if(ok){await fetchPosts(curView);renderView();updateCounts();showToast('Post pubblicato!');}
+}
+async function toggleReact(postId,em){
+  const ch=postsCache[curView]||[];
+  const p=ch.find(x=>x.id===postId); if(!p)return;
+  if(!p.reactions)p.reactions={};
+  if(!p.reactions[em])p.reactions[em]=[];
+  const i=p.reactions[em].indexOf(user);
+  if(i>=0)p.reactions[em].splice(i,1);else p.reactions[em].push(user);
+  if(!p.reactions[em].length)delete p.reactions[em];
+  await updateReactions(postId,p.reactions); renderView();
+}
+async function pinPost(postId){
+  await setPinned(postId); await fetchPosts(curView); renderView();
+}
+
+/* ══ CLASSIFICA ══ */
+function sortedEnt(tipo){return entitiesCache.filter(x=>x.tipo===tipo).sort((a,b)=>(b.pv||0)-(a.pv||0));}
+function medal(i){return['🥇','🥈','🥉'][i]||`#${i+1}`;}
+function toF(e){return{...e,colorBg:e.color_bg,missioni:e.missioni||[]};}
+
+function renderClassifica(c){
+  const all=[...sortedEnt('gilda'),...sortedEnt('fazione')].map(toF).sort((a,b)=>(b.pv||0)-(a.pv||0));
+  if(!all.length){c.innerHTML=`<div class="empty-state"><span class="ei">🏆</span>Nessuna gilda o fazione ancora.</div>`;return;}
+  const top=all[0]?.pv||1;
+  c.innerHTML=`<div class="cl-grid">${all.map((item,i)=>`
+    <div class="fc" onclick="openDetail('${item.tipo}','${item.id}')">
+      <div class="fc-banner" style="background:${item.color}"></div>
+      <div class="fc-body">
+        <div class="fc-top">
+          <div class="fc-embl" style="background:${item.colorBg}">${item.emblema}</div>
+          <div style="flex:1"><div class="fc-name">${esc(item.nome)}</div><div class="fc-tag">${item.tipo==='gilda'?'🛡️ Gilda':'⚑ Fazione'} · ${esc(item.tagline||'')}</div></div>
+          <div class="fc-rank">${medal(i)}</div>
+        </div>
+        <div class="pv-row">
+          <span class="pv-lbl">Punti Vessillo</span>
+          <div class="pv-bw"><div class="pv-b" style="width:${Math.round(((item.pv||0)/top)*100)}%;background:${item.color}"></div></div>
+          <span class="pv-v" style="color:${item.color}">${item.pv||0}</span>
+        </div>
+      </div>
+    </div>`).join('')}</div>`;
+}
+
+function renderEntityList(c,tipo){
+  const arr=sortedEnt(tipo).map(toF);
+  const icon=tipo==='gilda'?'🛡️':'⚑';
+  if(!arr.length){c.innerHTML=`<div class="empty-state"><span class="ei">${icon}</span>Nessun${tipo==='fazione'?'a':''} ${tipo} ancora.</div>`;return;}
+  c.innerHTML=`<div class="gl-grid">${arr.map(x=>`
+    <div class="gc" onclick="openDetail('${tipo}','${x.id}')">
+      <div class="ge" style="background:${x.colorBg}">${x.emblema}</div>
+      <div style="flex:1;min-width:0"><div class="gn">${esc(x.nome)}</div><div class="gs">${esc(x.tagline||'')}</div></div>
+      <span class="pvc" style="color:${x.color}">${x.pv||0} PV</span>
+    </div>`).join('')}</div>`;
+}
+
+function openDetail(tipo,id){
+  detail={tipo,id};
+  const act=document.getElementById('mh-actions'); act.innerHTML='';
+  if(role==='master') act.appendChild(mkBtn('✏️ Modifica',()=>openEntityModal('edit-'+tipo,id)));
+  renderView();
+}
+function getItem(tipo,id){return entitiesCache.find(x=>x.id===id&&x.tipo===tipo);}
+
+function renderDetail(c){
+  const{tipo,id}=detail, raw=getItem(tipo,id);
+  if(!raw){detail=null;renderView();return;}
+  const item=toF(raw);
+  const miss=(item.missioni||[]).map(m=>`<div class="miss-item"><i class="ti ti-arrow-right"></i>${esc(m)}</div>`).join('');
+  c.innerHTML=`
+    <button class="d-back" onclick="backDetail()"><i class="ti ti-arrow-left"></i> Indietro</button>
+    <div class="d-wrap">
+      <div class="d-head">
+        <div class="d-embl" style="background:${item.colorBg}">${item.emblema}</div>
+        <div><div class="d-name">${esc(item.nome)}</div><div class="d-tag">${esc(item.tagline||'')}</div></div>
+      </div>
+      <div class="d-pv"><span class="d-pvn" style="color:${item.color}">${item.pv||0}</span><span class="d-pvl">Punti Vessillo</span></div>
+      ${item.lore?`<div class="d-sec">Lore</div><div class="d-lore">${esc(item.lore)}</div>`:''}
+      ${miss?`<div class="d-sec">Missioni attive</div>${miss}`:''}
+    </div>`;
+}
+
+function backDetail(){
+  detail=null;
+  const act=document.getElementById('mh-actions'); act.innerHTML='';
+  if(role==='master'){
+    if(curView==='gilde')   act.appendChild(mkBtn('+ Nuova gilda',  ()=>openEntityModal('new-gilda')));
+    if(curView==='fazioni') act.appendChild(mkBtn('+ Nuova fazione',()=>openEntityModal('new-fazione')));
+  }
+  renderView();
+}
+
+/* ══ PANNELLO MASTER ══ */
+function renderPannello(c){
+  const all=[...sortedEnt('gilda'),...sortedEnt('fazione')].map(toF).sort((a,b)=>(b.pv||0)-(a.pv||0));
+  const pvRows=all.length?all.map(item=>`
+    <div class="pvc-row">
+      <div class="pvc-embl" style="background:${item.colorBg}">${item.emblema}</div>
+      <div class="pvc-name">${esc(item.nome)} <span style="font-size:10.5px;color:var(--text3)">${item.tipo}</span></div>
+      <button class="pvc-btn" onclick="chPV('${item.id}',-pvStep)">−</button>
+      <span class="pvc-val" style="color:${item.color}" id="pvd-${item.id}">${item.pv||0}</span>
+      <button class="pvc-btn" onclick="chPV('${item.id}',+pvStep)">+</button>
+    </div>`).join(''):'<p style="font-size:13px;color:var(--text3)">Crea prima gilde o fazioni.</p>';
+  const mkRows=(tipo)=>{
+    const arr=sortedEnt(tipo).map(toF);
+    return arr.length?arr.map(x=>`
+      <div class="pvc-row">
+        <div class="pvc-embl" style="background:${x.colorBg}">${x.emblema}</div>
+        <div class="pvc-name">${esc(x.nome)}</div>
+        <button class="pvc-btn" onclick="openEntityModal('edit-${tipo}','${x.id}')" style="width:auto;padding:0 8px;font-size:13px"><i class="ti ti-edit"></i></button>
+        <button class="danger-btn" style="font-size:12px;padding:3px 9px" onclick="delItem('${x.id}')">Elimina</button>
+      </div>`).join(''):`<p style="font-size:13px;color:var(--text3)">Nessun${tipo==='fazione'?'a':''} ${tipo}.</p>`;
+  };
+  c.innerHTML=`<div class="mp-wrap">
+    <div class="mp-card">
+      <h3>Punti Vessillo</h3>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <span style="font-size:13px;color:var(--text2)">Punti per click:</span>
+        <input type="number" class="step-inp" id="pv-step-inp" value="${pvStep}" min="1" max="999" oninput="pvStep=Math.max(1,parseInt(this.value)||1)">
+      </div>${pvRows}
+    </div>
+    <div class="mp-card"><h3>Gestisci Gilde</h3>${mkRows('gilda')}</div>
+    <div class="mp-card"><h3>Gestisci Fazioni</h3>${mkRows('fazione')}</div>
+  </div>`;
+}
+
+async function chPV(id,delta){
+  pvStep=Math.max(1,parseInt(document.getElementById('pv-step-inp')?.value)||pvStep);
+  const raw=entitiesCache.find(x=>x.id===id); if(!raw)return;
+  raw.pv=Math.max(0,(raw.pv||0)+delta);
+  const el=document.getElementById('pvd-'+id); if(el)el.textContent=raw.pv;
+  const item=toF(raw);
+  await upsertEntity({...item,tipo:raw.tipo});
+  showToast('Punti Vessillo aggiornati');
+}
+async function delItem(id){
+  if(!confirm('Eliminare questo elemento?'))return;
+  const ok=await deleteEntity(id);
+  if(ok){entitiesCache=entitiesCache.filter(x=>x.id!==id);sw('pannello');}
+}
+
+/* ══ POST MODAL ══ */
+function openPostModal(){
+  modalMode='new-post'; editId=null;
+  document.getElementById('modal-h').textContent='Nuovo post';
+  const channels=FORUM_KEYS.filter(k=>!(CH[k].mo&&role==='player'));
+  document.getElementById('modal-body').innerHTML=`
+    <label>Sezione</label>
+    <select id="m-ch">${channels.map(k=>`<option value="${k}"${k===curView&&FORUM_KEYS.includes(curView)?' selected':''}>${CH[k].icon} ${CH[k].title}</option>`).join('')}</select>
+    <label>Titolo <span style="color:var(--text3)">(opzionale)</span></label>
+    <input type="text" id="m-titl" maxlength="80" placeholder="Es. Cerco un artigiano…">
+    <label>Contenuto</label>
+    <textarea id="m-body" maxlength="1200" placeholder="Scrivi il tuo post…" style="min-height:120px"></textarea>`;
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-body')?.focus(),50);
+}
+async function submitModalPost(){
+  const ch=document.getElementById('m-ch').value;
+  const title=document.getElementById('m-titl').value.trim();
+  const body=document.getElementById('m-body').value.trim();
+  if(!body){alert('Scrivi qualcosa!');return;}
+  const ok=await insertPost(ch,{author:user,role,title:title||null,body});
+  if(ok){closeModal();await sw(ch);showToast('Post pubblicato!');}
+}
+
+/* ══ ENTITY MODAL ══ */
+function openEntityModal(mode,id=null){
+  modalMode=mode; editId=id;
+  const isg=mode.includes('gilda'), ise=mode.startsWith('edit');
+  const tipo=isg?'gilda':'fazione';
+  document.getElementById('modal-h').textContent=ise?`Modifica ${tipo}`:`Nuova ${tipo}`;
+  let ex={};
+  if(ise&&id){const raw=getItem(tipo,id);if(raw)ex=toF(raw);}
+  selEmb=ex.emblema||EMBLEMI[0]; selCol=ex.color||CHEX[0]; selColBg=ex.colorBg||CBGX[0];
+  const miss=(ex.missioni||[]).join('\n');
+  document.getElementById('modal-body').innerHTML=`
+    <label>Nome</label>
+    <input type="text" id="m-nome" value="${esc(ex.nome||'')}" maxlength="40" placeholder="${isg?'Es. Ordine del Falco Nero':'Es. Seguaci di Tiamat'}">
+    <label>Motto</label>
+    <input type="text" id="m-tag" value="${esc(ex.tagline||'')}" maxlength="60" placeholder="Una breve frase">
+    <label>Emblema</label>
+    <div class="emoji-row">${EMBLEMI.map(e=>`<button type="button" class="eo${e===selEmb?' sel':''}" onclick="pickEmb('${e}')">${e}</button>`).join('')}</div>
+    <label>Colore</label>
+    <div class="color-row">${CHEX.map((col,i)=>`<div class="co${col===selCol?' sel':''}" style="background:${col}" onclick="pickCol('${col}','${CBGX[i]}')"></div>`).join('')}</div>
+    <label>Lore</label>
+    <textarea id="m-lore" maxlength="600" placeholder="Descrizione pubblica (senza riferimenti ai membri)">${esc(ex.lore||'')}</textarea>
+    <label>Missioni attive <span style="color:var(--text3)">(una per riga)</span></label>
+    <textarea id="m-miss" maxlength="400" placeholder="Es. Recuperare l'artefatto perduto…">${esc(miss)}</textarea>
+    <label>Punti Vessillo</label>
+    <input type="number" id="m-pv" value="${ex.pv||0}" min="0">`;
+  document.getElementById('modal-overlay').classList.add('open');
+  setTimeout(()=>document.getElementById('m-nome')?.focus(),50);
+}
+function pickEmb(e){selEmb=e;document.querySelectorAll('.eo').forEach(b=>b.classList.toggle('sel',b.textContent===e));}
+function pickCol(c,bg){selCol=c;selColBg=bg;document.querySelectorAll('.co').forEach(d=>d.classList.toggle('sel',d.style.background===c));}
+
+async function saveEntity(){
+  const tipo=modalMode.includes('gilda')?'gilda':'fazione';
+  const nome=document.getElementById('m-nome').value.trim();
+  if(!nome){alert('Inserisci un nome!');return;}
+  const miss=document.getElementById('m-miss').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const obj={
+    id:editId||('id_'+Date.now()), tipo, nome,
+    tagline:document.getElementById('m-tag').value.trim(),
+    emblema:selEmb, color:selCol, colorBg:selColBg,
+    lore:document.getElementById('m-lore').value.trim(),
+    missioni:miss, pv:parseInt(document.getElementById('m-pv').value)||0,
+  };
+  const ok=await upsertEntity(obj);
+  if(ok){await fetchEntities();closeModal();sw(tipo==='gilda'?'gilde':'fazioni');showToast('Salvato!');}
+}
+
+/* ══ MODAL DISPATCH ══ */
+function modalOk(){if(modalMode==='new-post')submitModalPost();else saveEntity();}
+function closeModal(){document.getElementById('modal-overlay').classList.remove('open');}
+document.getElementById('modal-overlay').addEventListener('click',e=>{if(e.target===document.getElementById('modal-overlay'))closeModal();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeModal();});
+
+/* ══ EMOJI PICKER ══ */
+const epick=document.getElementById('emoji-picker');
+epick.innerHTML=EMOJIS.map(e=>`<button onclick="addReact('${e}')">${e}</button>`).join('');
+function showEpick(ev,postId){
+  ev.stopPropagation(); epickIdx=postId;
+  epick.classList.add('open');
+  epick.style.left=Math.max(4,Math.min(ev.clientX-80,window.innerWidth-210))+'px';
+  epick.style.top=Math.min(ev.clientY+10,window.innerHeight-160)+'px';
+}
+function addReact(em){epick.classList.remove('open');if(epickIdx===null)return;toggleReact(epickIdx,em);}
+document.addEventListener('click',()=>epick.classList.remove('open'));
+
+/* ══ TOAST ══ */
+let toastTimer;
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2500);
+}
+
+/* ══ HELPERS ══ */
+const COL_C=['#7F77DD','#1D9E75','#D85A30','#D4537E','#378ADD','#BA7517','#639922'];
+const COL_BG=['#EEEDFE','#E1F5EE','#FAECE7','#FBEAF0','#E6F1FB','#FAEEDA','#EAF3DE'];
+function getCol(name){let h=0;for(const c of name)h=(h*31+c.charCodeAt(0))%COL_C.length;return{bg:COL_BG[h],c:COL_C[h]};}
+function ini(name){return name.split(' ').slice(0,2).map(w=>w[0]?.toUpperCase()||'').join('');}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function fmtTime(d){return d.toLocaleDateString('it-IT',{day:'2-digit',month:'short',year:'numeric'})+' '+d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});}
+
+/* ══ AVVIO ══ */
+initSupabase();
+</script>
+</body>
+</html>
