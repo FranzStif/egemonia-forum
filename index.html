@@ -4,11 +4,11 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
 <title>Portale Egemonia — Forum & Gilde</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tabler-icons/2.44.0/iconfont/tabler-icons.min.css" crossorigin="anonymous"/>
+
 <script>
   const SUPABASE_URL  = 'https://ugfzulyirbvhtdyfywmp.supabase.co';
   const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVnZnp1bHlpcmJ2aHRkeWZ5d21wIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODMwNjMxMDYsImV4cCI6MjA5ODYzOTEwNn0.EFxmEBZb4hrUIiHOccKi-yntN5PGZy8fja5fFintEjE';
-  const MASTER_PASSWORD = 'egemonia2026';
+  const MASTER_PASSWORD = 'egemonia2025';
 </script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -279,7 +279,7 @@ button.danger-btn:hover{background:var(--danger-bg)}
 
 <div id="app">
   <div id="topbar">
-    <button id="menu-toggle" onclick="toggleSidebar()"><i class="ti ti-menu-2"></i></button>
+    <button id="menu-toggle" onclick="toggleSidebar()">☰</button>
     <span class="tb-brand">⚔️ Egemonia</span>
     <span id="tb-badge"></span>
   </div>
@@ -292,20 +292,20 @@ button.danger-btn:hover{background:var(--danger-bg)}
         <button class="logout-btn" onclick="doLogout()">← Esci</button>
       </div>
       <div class="sg">Forum</div>
-      <button class="nb" data-v="annunci"  onclick="sw('annunci')"><i class="ti ti-speakerphone"></i>Annunci<span class="cnt" id="c-annunci">0</span></button>
-      <button class="nb" data-v="missioni" onclick="sw('missioni')"><i class="ti ti-map-2"></i>Missioni<span class="cnt" id="c-missioni">0</span></button>
-      <button class="nb" data-v="lore"     onclick="sw('lore')"><i class="ti ti-book"></i>Lore<span class="cnt" id="c-lore">0</span></button>
-      <button class="nb" data-v="diari"    onclick="sw('diari')"><i class="ti ti-feather"></i>Diari &amp; Azioni<span class="cnt" id="c-diari">0</span></button>
-      <button class="nb" data-v="mercato"  onclick="sw('mercato')"><i class="ti ti-shopping-bag"></i>Mercato<span class="cnt" id="c-mercato">0</span></button>
-      <button class="nb" data-v="taverna"  onclick="sw('taverna')"><i class="ti ti-beer"></i>Taverna<span class="cnt" id="c-taverna">0</span></button>
-      <button class="nb" data-v="notizie"  onclick="sw('notizie')"><i class="ti ti-news"></i>Notizie<span class="cnt" id="c-notizie">0</span></button>
+      <button class="nb" data-v="annunci"  onclick="sw('annunci')">📢Annunci<span class="cnt" id="c-annunci">0</span></button>
+      <button class="nb" data-v="missioni" onclick="sw('missioni')">🗺️Missioni<span class="cnt" id="c-missioni">0</span></button>
+      <button class="nb" data-v="lore"     onclick="sw('lore')">📖Lore<span class="cnt" id="c-lore">0</span></button>
+      <button class="nb" data-v="diari"    onclick="sw('diari')">🪶Diari &amp; Azioni<span class="cnt" id="c-diari">0</span></button>
+      <button class="nb" data-v="mercato"  onclick="sw('mercato')">🛍️Mercato<span class="cnt" id="c-mercato">0</span></button>
+      <button class="nb" data-v="taverna"  onclick="sw('taverna')">🍺Taverna<span class="cnt" id="c-taverna">0</span></button>
+      <button class="nb" data-v="notizie"  onclick="sw('notizie')">📜Notizie<span class="cnt" id="c-notizie">0</span></button>
       <div class="sg">Fazioni</div>
-      <button class="nb" data-v="classifica" onclick="sw('classifica')"><i class="ti ti-trophy"></i>Classifica PV</button>
-      <button class="nb" data-v="gilde"      onclick="sw('gilde')"><i class="ti ti-shield"></i>Gilde</button>
-      <button class="nb" data-v="fazioni"    onclick="sw('fazioni')"><i class="ti ti-flag"></i>Fazioni</button>
+      <button class="nb" data-v="classifica" onclick="sw('classifica')">🏆Classifica PV</button>
+      <button class="nb" data-v="gilde"      onclick="sw('gilde')">🛡️Gilde</button>
+      <button class="nb" data-v="fazioni"    onclick="sw('fazioni')">⚑Fazioni</button>
       <div class="sg" id="sg-master" style="display:none">Master</div>
-      <button class="nb" id="nb-pannello" data-v="pannello" onclick="sw('pannello')" style="display:none"><i class="ti ti-settings"></i>Pannello</button>
-      <div id="sb-bottom"><button onclick="openPostModal()"><i class="ti ti-edit"></i> Nuovo post</button></div>
+      <button class="nb" id="nb-pannello" data-v="pannello" onclick="sw('pannello')" style="display:none">⚙️Pannello</button>
+      <div id="sb-bottom"><button onclick="openPostModal()">✏️ Nuovo post</button></div>
     </nav>
     <main id="main">
       <div id="main-header">
@@ -532,7 +532,7 @@ function renderForum(c){
   const info=CH[curView],locked=info.mo&&role==='player';
   const ch=postsCache[curView]||[];
   let html='';
-  ch.filter(p=>p.pinned).forEach(p=>{html+=`<div class="pinned-bar"><i class="ti ti-pin"></i><div><strong>${esc(p.author)}:</strong> ${esc((p.title||p.body).slice(0,80))}…</div></div>`;});
+  ch.filter(p=>p.pinned).forEach(p=>{html+=`<div class="pinned-bar">📌<div><strong>${esc(p.author)}:</strong> ${esc((p.title||p.body).slice(0,80))}…</div></div>`;});
   const wrap=document.createElement('div');wrap.innerHTML=html;
   const list=document.createElement('div');list.className='posts-list';
   if(!ch.length){list.innerHTML=`<div class="empty-state"><span class="ei">${info.icon}</span>${locked?'Nessun annuncio ancora.':'Nessun post ancora. Sii il primo!'}</div>`;}
@@ -540,7 +540,7 @@ function renderForum(c){
     [...ch].reverse().forEach(p=>{
       const cl=getCol(p.author),isMp=p.role==='master';
       const reacts=Object.entries(p.reactions||{}).map(([em,us])=>`<button class="rb${us.includes(user)?' on':''}" onclick="toggleReact(${p.id},'${em}')">${em} ${us.length}</button>`).join('');
-      const pinBtn=role==='master'&&!p.pinned?`<button class="pin-btn" onclick="pinPost(${p.id})"><i class="ti ti-pin"></i> Fissa</button>`:'';
+      const pinBtn=role==='master'&&!p.pinned?`<button class="pin-btn" onclick="pinPost(${p.id})">📌 Fissa</button>`:'';
       const card=document.createElement('div');card.className='post-card'+(isMp?' master-post':'');
       card.innerHTML=`<div class="post-head"><div class="post-av" style="background:${cl.bg};color:${cl.c}">${ini(p.author)}</div><div class="post-meta"><div class="post-author">${esc(p.author)}<span class="badge ${isMp?'master':'player'}">${isMp?'Master':'PG'}</span></div><div class="post-time">${fmtTime(new Date(p.created_at))}</div></div></div>${p.title?`<div class="post-title">${esc(p.title)}</div>`:''}<div class="post-body">${esc(p.body)}</div><div class="post-reacts">${reacts}<button class="rb-add" onclick="showEpick(event,${p.id})">+ 😊</button>${pinBtn}</div>`;
       list.appendChild(card);
@@ -551,7 +551,7 @@ function renderForum(c){
   if(!locked){
     cb.innerHTML=`<div class="cl"><span>Scrivi in ${info.title}</span><span id="char-count">0 / 800</span></div><textarea id="compose-txt" maxlength="800" placeholder="Cosa fa il tuo personaggio nel downtime?" oninput="updCC()"></textarea><div class="cf"><span class="hint">Scrivi in prima persona</span><button class="primary" onclick="submitPost()">Pubblica</button></div>`;
   }else{
-    cb.innerHTML=`<div style="padding:.4rem 0;font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px"><i class="ti ti-lock"></i> Solo il Master può scrivere qui</div>`;
+    cb.innerHTML=`<div style="padding:.4rem 0;font-size:13px;color:var(--text3);display:flex;align-items:center;gap:6px">🔒 Solo il Master può scrivere qui</div>`;
   }
   document.getElementById('main').appendChild(cb);
   c.scrollTop=c.scrollHeight;
@@ -598,8 +598,8 @@ function renderDetail(c){
   const{tipo,id}=detail,raw=getItem(tipo,id);
   if(!raw){detail=null;renderView();return;}
   const item=toF(raw);
-  const miss=(item.missioni||[]).map(m=>`<div class="miss-item"><i class="ti ti-arrow-right"></i>${esc(m)}</div>`).join('');
-  c.innerHTML=`<button class="d-back" onclick="backDetail()"><i class="ti ti-arrow-left"></i> Indietro</button><div class="d-wrap"><div class="d-head"><div class="d-embl" style="background:${item.colorBg}">${item.emblema}</div><div><div class="d-name">${esc(item.nome)}</div><div class="d-tag">${esc(item.tagline||'')}</div></div></div><div class="d-pv"><span class="d-pvn" style="color:${item.color}">${item.pv||0}</span><span class="d-pvl">Punti Vessillo</span></div>${item.lore?`<div class="d-sec">Lore</div><div class="d-lore">${esc(item.lore)}</div>`:''}${miss?`<div class="d-sec">Missioni attive</div>${miss}`:''}</div>`;
+  const miss=(item.missioni||[]).map(m=>`<div class="miss-item">→${esc(m)}</div>`).join('');
+  c.innerHTML=`<button class="d-back" onclick="backDetail()">← Indietro</button><div class="d-wrap"><div class="d-head"><div class="d-embl" style="background:${item.colorBg}">${item.emblema}</div><div><div class="d-name">${esc(item.nome)}</div><div class="d-tag">${esc(item.tagline||'')}</div></div></div><div class="d-pv"><span class="d-pvn" style="color:${item.color}">${item.pv||0}</span><span class="d-pvl">Punti Vessillo</span></div>${item.lore?`<div class="d-sec">Lore</div><div class="d-lore">${esc(item.lore)}</div>`:''}${miss?`<div class="d-sec">Missioni attive</div>${miss}`:''}</div>`;
 }
 function backDetail(){
   detail=null;const act=document.getElementById('mh-actions');act.innerHTML='';
@@ -614,7 +614,7 @@ function backDetail(){
 function renderPannello(c){
   const all=[...sortedEnt('gilda'),...sortedEnt('fazione')].map(toF).sort((a,b)=>(b.pv||0)-(a.pv||0));
   const pvRows=all.length?all.map(item=>`<div class="pvc-row"><div class="pvc-embl" style="background:${item.colorBg}">${item.emblema}</div><div class="pvc-name">${esc(item.nome)} <span style="font-size:10px;color:var(--text3)">${item.tipo}</span></div><button class="pvc-btn" onclick="chPV('${item.id}',-pvStep)">−</button><span class="pvc-val" style="color:${item.color}" id="pvd-${item.id}">${item.pv||0}</span><button class="pvc-btn" onclick="chPV('${item.id}',+pvStep)">+</button></div>`).join(''):'<p style="font-size:13px;color:var(--text3)">Crea prima gilde o fazioni.</p>';
-  const mkRows=(tipo)=>{const arr=sortedEnt(tipo).map(toF);return arr.length?arr.map(x=>`<div class="pvc-row"><div class="pvc-embl" style="background:${x.colorBg}">${x.emblema}</div><div class="pvc-name">${esc(x.nome)}</div><button class="pvc-btn" onclick="openEntityModal('edit-${tipo}','${x.id}')" style="width:auto;padding:0 8px;font-size:12px"><i class="ti ti-edit"></i></button><button class="danger-btn" style="font-size:11px;padding:2px 8px" onclick="delItem('${x.id}')">Elimina</button></div>`).join(''):`<p style="font-size:13px;color:var(--text3)">Nessun${tipo==='fazione'?'a':''} ${tipo}.</p>`;};
+  const mkRows=(tipo)=>{const arr=sortedEnt(tipo).map(toF);return arr.length?arr.map(x=>`<div class="pvc-row"><div class="pvc-embl" style="background:${x.colorBg}">${x.emblema}</div><div class="pvc-name">${esc(x.nome)}</div><button class="pvc-btn" onclick="openEntityModal('edit-${tipo}','${x.id}')" style="width:auto;padding:0 8px;font-size:12px">✏️</button><button class="danger-btn" style="font-size:11px;padding:2px 8px" onclick="delItem('${x.id}')">Elimina</button></div>`).join(''):`<p style="font-size:13px;color:var(--text3)">Nessun${tipo==='fazione'?'a':''} ${tipo}.</p>`;};
 
   // lista giocatori
   const pgList=Object.entries(playersCache);
