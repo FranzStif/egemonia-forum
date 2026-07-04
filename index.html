@@ -220,19 +220,17 @@ button.danger-btn:hover{background:var(--danger-bg)}
 
 /* MOBILE */
 @media(max-width:700px){
-  #app{display:none;flex-direction:column}
-  #topbar{display:flex}
+  #topbar{display:flex!important}
   #layout{flex:1;overflow:hidden}
-  #sidebar{position:fixed;top:0;left:0;bottom:0;width:75vw;max-width:280px;z-index:99;transform:translateX(-100%);box-shadow:var(--shadow-md);padding-top:0}
+  #sidebar{position:fixed;top:50px;left:0;bottom:0;width:75vw;max-width:280px;z-index:99;transform:translateX(-100%);box-shadow:var(--shadow-md)}
   #sidebar.open{transform:translateX(0)}
   #sb-overlay.open{display:block}
   .gl-grid{grid-template-columns:1fr}
   #mh-actions button{font-size:11px;padding:4px 8px}
 }
 @media(min-width:701px){
-  #app{display:none}
-  #topbar{display:none}
-  #sidebar{transform:none!important}
+  #topbar{display:none!important}
+  #sidebar{transform:none!important;position:relative}
 }
 </style>
 </head>
@@ -458,6 +456,7 @@ async function doLogin(){
   user=n;role=pendingRole;
   document.getElementById('login-page').style.display='none';
   document.getElementById('app').style.display='flex';
+  document.getElementById('app').style.flexDirection='column';
   document.getElementById('sb-name').textContent=n;
   const bdg=role==='master'?'<span class="badge master">Master</span>':'<span class="badge player">PG</span>';
   document.getElementById('sb-badge-el').innerHTML=bdg;
@@ -475,6 +474,7 @@ function doLogout(){
   user=null;role=null;detail=null;
   if(realtimeSub){sb.removeChannel(realtimeSub);realtimeSub=null;}
   document.getElementById('app').style.display='none';
+  document.getElementById('app').style.flexDirection='';
   document.getElementById('login-page').style.display='flex';
   document.getElementById('name-wrap').style.display='none';
   document.getElementById('sg-master').style.display='none';
